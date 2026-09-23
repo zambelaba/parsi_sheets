@@ -4,9 +4,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <base target="_top">
     <style>
-      /* Built for a sidebar, which Google fixes at roughly 300px wide.
-         Everything is a single stacked column: there is no room for a grid,
-         and a button that wraps its label mid-word looks broken. */
+      /* Laid out for a 300px sidebar: one stacked column. */
       :root {
         --bg: #1D4616;
         --accent: #B3C72E;
@@ -14,13 +12,7 @@
         --muted: #A9BC96;
         --ink: #16300F;
       }
-
-      /* Set on html as well as body: colouring only body leaves a white strip
-         down the side of the panel wherever the content is shorter. */
-      html, body {
-        background-color: var(--bg);
-      }
-
+      html, body { background-color: var(--bg); }
       body {
         font-family: Roboto, sans-serif;
         padding: 12px;
@@ -28,42 +20,22 @@
         color: var(--text);
         font-size: 14px;
       }
-
-      .description {
+      .description, .warning {
         margin-bottom: 14px;
-        background-color: rgba(255, 255, 255, 0.07);
         padding: 10px 12px;
-        border-left: 4px solid var(--accent);
         border-radius: 6px;
         font-size: 13px;
         line-height: 1.45;
       }
-
-      /* Deliberately amber rather than green. A warning has to read as a
-         warning, and a green one on a green panel is just more panel. */
+      .description { background-color: rgba(255, 255, 255, 0.07); border-left: 4px solid var(--accent); }
       .warning {
-        margin-bottom: 14px;
         background-color: rgba(249, 171, 0, 0.14);
-        padding: 10px 12px;
         border-left: 4px solid #F9AB00;
-        border-radius: 6px;
-        font-size: 13px;
-        line-height: 1.45;
         color: #FFE2A8;
         word-break: break-word;
       }
-
-      /* Deliberately one per row rather than a reflowing grid. The extra
-         width from the dialog goes to the instructions, which need it, while
-         the buttons stay easy to hit and their labels never wrap. */
-      .button-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-
+      .buttons { display: grid; gap: 8px; }
       .copy-button {
-        display: block;
         width: 100%;
         font-family: Roboto, sans-serif;
         font-size: 14px;
@@ -75,36 +47,12 @@
         color: var(--ink);
         cursor: pointer;
         transition: background-color 0.15s, transform 0.1s;
-        text-align: center;
       }
-
       .copy-button:hover { background-color: #C6DA3C; }
       .copy-button:active { transform: scale(0.98); }
-
-      /* Pale rather than another green: three greens all meaning different
-         things is one green too many. */
-      .copy-button.copied {
-        background-color: #F2F7DC;
-        color: var(--bg);
-      }
-
-      .copy-button.failed {
-        background-color: #C5462F;
-        color: #FFFFFF;
-      }
-
-      /* Nothing to copy, so the button says so rather than failing silently. */
-      .copy-button:disabled {
-        background-color: #3A5533;
-        color: #8FA487;
-        cursor: default;
-      }
-
-      /* Collapsed by default. The steps matter the first few times and are
-         clutter forever after, which is exactly what details/summary is for.
-         One block for all three buttons: the route through the WeakAura is
-         identical, only the section you expand carries the boss name, and the
-         button you just clicked already told you which that is. */
+      .copy-button.copied { background-color: #F2F7DC; color: var(--bg); }
+      .copy-button.failed { background-color: #C5462F; color: #FFFFFF; }
+      .copy-button:disabled { background-color: #3A5533; color: #8FA487; cursor: default; }
       details.how {
         margin: 0 0 14px;
         font-size: 12px;
@@ -114,44 +62,16 @@
         border-radius: 6px;
         padding: 8px 12px;
       }
-
-      details.how summary {
-        cursor: pointer;
-        padding: 2px 0;
-        color: var(--accent);
-        font-weight: 600;
-        list-style: none;
-      }
-
-      /* Spelled out rather than relying on the arrow alone. A summary that
-         does not look clickable simply never gets clicked. */
+      details.how summary { cursor: pointer; padding: 2px 0; color: var(--accent); font-weight: 600; list-style: none; }
       details.how summary::-webkit-details-marker { display: none; }
       details.how summary::before { content: '▸ '; }
       details.how[open] summary::before { content: '▾ '; }
-      details.how summary::after {
-        content: ' (click to open)';
-        color: var(--muted);
-        font-weight: 400;
-      }
+      details.how summary::after { content: ' (click to open)'; color: var(--muted); font-weight: 400; }
       details.how[open] summary::after { content: ' (click to close)'; }
-
-      details.how ol {
-        margin: 6px 0 0;
-        padding-left: 18px;
-      }
-
+      details.how ol { margin: 6px 0 0; padding-left: 18px; }
       details.how li { margin-bottom: 3px; }
-
       details.how b { color: var(--text); font-weight: 600; }
-
-      /* One worked example, so the two short steps above have something
-         concrete behind them without every step carrying its own aside. */
-      details.how .eg {
-        margin: 8px 0 0;
-        padding-top: 8px;
-        border-top: 1px solid rgba(255, 255, 255, 0.12);
-      }
-
+      details.how .eg { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid rgba(255, 255, 255, 0.12); }
       .stale {
         margin-top: 16px;
         padding-top: 12px;
@@ -165,8 +85,7 @@
 
   <body>
     <div class="description">
-      ✅ Copy a string, then paste it into
-      <b>Fojji - [T6] Raid Pack</b> in game.
+      ✅ Copy a string, then paste it into <b>Fojji - [T6] Raid Pack</b> in game.
     </div>
 
     <details class="how">
@@ -180,19 +99,17 @@
         <li>Click <b>Accept</b></li>
       </ol>
       <p class="eg">
-        Bloodboil: expand <b>[Raid Leader] Bloodboil Soak Assigner</b>,
-        then <b>Configure Soak Teams</b>.
+        Bloodboil: expand <b>[Raid Leader] Bloodboil Soak Assigner</b>, then <b>Configure Soak Teams</b>.
       </p>
     </details>
 
-    <? if (data.missing && data.missing.length) { ?>
+    <? if (data.missing.length) { ?>
       <div class="warning">
-        ⚠️ Nothing to copy for: <?= data.missing.join(', ') ?>.
-        Those buttons are greyed out.
+        ⚠️ Nothing to copy for: <?= data.missing.join(', ') ?>. Those buttons are greyed out.
       </div>
     <? } ?>
 
-    <div class="button-grid">
+    <div class="buttons">
       <button class="copy-button" data-value="<?= data.bloodboilSoak ?>">Bloodboil Soak Teams</button>
       <button class="copy-button" data-value="<?= data.soulsInterrupts ?>">Souls Interrupts</button>
       <button class="copy-button" data-value="<?= data.councilInterrupts ?>">Council Interrupts</button>
@@ -203,57 +120,47 @@
     </div>
 
     <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.copy-button').forEach(button => {
-          const label = button.textContent;
+      document.querySelectorAll('.copy-button').forEach(button => {
+        const label = button.textContent;
+        const value = button.getAttribute('data-value');
+        if (!value) {
+          button.disabled = true;
+          button.textContent = label + ' (empty)';
+          return;
+        }
 
-          if (!button.getAttribute('data-value')) {
-            button.disabled = true;
-            button.textContent = label + ' (empty)';
-            return;
+        const flash = (className, message, ms) => {
+          button.classList.add(className);
+          button.textContent = message;
+          setTimeout(() => {
+            button.classList.remove(className);
+            button.textContent = label;
+          }, ms);
+        };
+
+        // navigator.clipboard is blocked in some sandboxed frames.
+        const copyWithTextarea = () => {
+          const scratch = document.createElement('textarea');
+          scratch.value = value;
+          scratch.style.position = 'fixed';
+          scratch.style.opacity = '0';
+          document.body.appendChild(scratch);
+          scratch.select();
+          try {
+            document.execCommand('copy');
+            flash('copied', 'Copied', 600);
+          } catch (err) {
+            flash('failed', 'Copy failed', 1200);
           }
+          document.body.removeChild(scratch);
+        };
 
-          // Classes rather than inline styles, so the palette lives entirely
-          // in the CSS above and there is one place to change a colour.
-          const flash = (className, message, ms) => {
-            button.classList.add(className);
-            button.textContent = message;
-            setTimeout(() => {
-              button.classList.remove(className);
-              button.textContent = label;
-            }, ms);
-          };
-
-          button.addEventListener('click', () => {
-            const value = button.getAttribute('data-value');
-
-            // navigator.clipboard is blocked in some sandboxed frames, and a
-            // button that silently does nothing is worse than an ugly one, so
-            // fall back to a hidden textarea and execCommand.
-            const fallback = () => {
-              const scratch = document.createElement('textarea');
-              scratch.value = value;
-              scratch.style.position = 'fixed';
-              scratch.style.opacity = '0';
-              document.body.appendChild(scratch);
-              scratch.select();
-              try {
-                document.execCommand('copy');
-                flash('copied', 'Copied', 600);
-              } catch (err) {
-                flash('failed', 'Copy failed', 1200);
-              }
-              document.body.removeChild(scratch);
-            };
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(value)
-                .then(() => flash('copied', 'Copied', 600))
-                .catch(fallback);
-            } else {
-              fallback();
-            }
-          });
+        button.addEventListener('click', () => {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(value).then(() => flash('copied', 'Copied', 600)).catch(copyWithTextarea);
+          } else {
+            copyWithTextarea();
+          }
         });
       });
     </script>
