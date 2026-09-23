@@ -15,7 +15,7 @@ function writeRatioForRCLCInAdmin() {
   // Loop through rows, skipping the header row
   for (let i = 2; i < data.length; i++) {
     const key = data[i][0];    // Column A (index 0)
-    const value = data[i][9].toFixed(3); // Column J (index 9)    
+    const value = (Number(data[i][9]) || 0).toFixed(3); // Column J (index 9)
 
     Logger.log(`Ligne ${i+1} | key="${key}" | value="${value}"`);
 
@@ -163,8 +163,9 @@ function process_rclc_raid_logs_loots(options) {
       parsed = JSON.parse(payloadCell);
     } catch (e) {
       try {
-        // fallback: attempt to evaluate object-like text
-        parsed = eval('(' + payloadCell + ')');
+        // fallback: payload may be a comma-separated list of objects without
+        // the wrapping array brackets
+        parsed = JSON.parse('[' + String(payloadCell).replace(/,\s*$/, '') + ']');
       } catch (e2) {
         // unable to parse, skip
         Logger.log('Skipping row ' + rowIndex + ': invalid JSON');
