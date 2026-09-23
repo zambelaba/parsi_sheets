@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_blank">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        color: #202124;
+        font-size: 15px;
+        padding: 24px;
+        margin: 0;
+        background-color: #fff;
+      }
+
+      .icon {
+        font-family: 'Material Symbols Outlined';
+        font-size: 24px;
+        vertical-align: middle;
+        color: #fbbc04;
+        margin-right: 8px;
+      }
+
+      p {
+        margin: 0 0 12px 0;
+      }
+
+      a {
+        color: #1a73e8;
+        text-decoration: none;
+      }
+
+      .button-bar {
+        text-align: right;
+        margin-top: 24px;
+      }
+
+      .button {
+        background-color: #1a73e8;
+        color: white;
+        border: none;
+        padding: 6px 16px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .button:hover {
+        background-color: #1669c1;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <span class="icon">warning</span>
+      <strong>RaidHelper Composition is empty OR there are players in the composition that are assigned as "Late", "Absence" or an invalid Spec.</strong>
+    </header>
+    <p>Please fill out your raid composition and/or adjust the players to valid specs on the RaidHelper Dashboard using <strong><a href="<?= url ?>"> this link</a></strong>. When completed, close this popup and click Refresh RaidHelper Data.</p>
+    
+
+    <div class="button-bar">
+      <button class="button" onclick="google.script.host.close()">OK</button>
+    </div>
+  </body>
+</html>

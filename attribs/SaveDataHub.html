@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <base target="_top">
+    <style>
+      body { font-family: Roboto, sans-serif; padding: 20px; background-color: #f9f9f9; color: #333; }
+      h2 { margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+      label { font-weight: bold; display: block; margin-bottom: 6px; margin-top: 16px; font-size: 15px; }
+      textarea {
+        width: 100%; height: 80px; resize: none;
+        font-family: Roboto, sans-serif; font-size: 13px;
+        padding: 8px; border-radius: 6px;
+        border: 1px solid #ccc; background-color: #fff;
+        cursor: pointer; transition: background 0.2s, border 0.2s;
+      }
+      textarea:hover { border-color: #999; background-color: #f1f1f1; }
+      textarea.copied { background-color: #d4fcdc; border-color: #4CAF50; }
+      .description {
+        background-color: #eef2f7; padding: 12px 16px;
+        border-left: 4px solid #1a73e8; border-radius: 6px;
+        font-size: 14px; margin-bottom: 20px;
+      }
+      .buttons { margin-top: 20px; text-align: right; }
+      .button {
+        font-size:14px; padding:8px 16px; border-radius:5px;
+        border:none; cursor:pointer;
+      }
+      .primary { background-color:#1a73e8; color:white; }
+      .primary:hover { background-color:#1669c1; }
+      .secondary { background-color:#ddd; color:#333; }
+    </style>
+  </head>
+  <body>
+    <h2>Instructions</h2>
+    <div class="description">
+      Simply click once to copy the data. Then paste inside of either the "Load Guild Data" and/or "Load Assignments" paste boxes by selecting "From string" in the dropdown menu.
+    </div>
+
+    <label>Guild Data</label>
+    <textarea readonly onclick="copyText(this)"><?= data.guild ?></textarea>
+
+    <h2>Assignments</h2>
+    <? data.assignments.forEach(a => { ?>
+      <label><?= a.label ?></label>
+      <textarea readonly onclick="copyText(this)"><?= a.value ?></textarea>
+    <? }) ?>
+
+    <div class="buttons">
+      <button class="button secondary" onclick="google.script.host.close()">Close</button>
+    </div>
+
+    <script>
+      function copyText(el) {
+        el.select()
+        navigator.clipboard.writeText(el.value).then(() => {
+          el.classList.add('copied')
+          setTimeout(() => el.classList.remove('copied'), 600)
+        })
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <style>
+      body { font-family:"Roboto",sans-serif;background:#f9f9f9;padding:20px;color:#333; }
+      h2 { font-size:17px;margin-bottom:8px; }
+      p { font-size:14px;margin-bottom:10px; }
+      select { width:100%;font-size:14px;padding:8px;border-radius:6px;border:1px solid #ccc;background:#fff; }
+      .buttons { margin-top:20px;text-align:right; }
+      .button { font-size:14px;padding:8px 16px;border-radius:5px;border:none;cursor:pointer; }
+      .primary { background:#1a73e8;color:#fff; }
+      .primary:hover { background:#1669c1; }
+      .secondary { background:#ddd;color:#333; }
+      .hidden { display:none; }
+
+      #loading { display:none;text-align:center;padding-top:50px; }
+      .spinner {
+        width:45px;height:45px;margin:0 auto 15px auto;
+        border:5px solid #ddd;border-top:5px solid #1a73e8;border-radius:50%;
+        animation:spin 1s linear infinite;
+      }
+      .loading-text { font-size:24px;font-weight:600;color:#444; }
+      @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+      .error {
+        margin-top:10px;
+        padding:8px 10px;
+        border-radius:4px;
+        background-color:#fdecea;
+        color:#b71c1c;
+        font-size:13px;
+        display:none;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="content">
+      <h2>Import Roster Split</h2>
+      <p>Select which split to import into the Roster:</p>
+
+      <div id="errorBox" class="error"></div>
+
+      <select id="split">
+        <option value="">-- Select Split --</option>
+        <? for (var i=0; i<splitOptions.length; i++) { ?>
+          <option value="<?= splitOptions[i] ?>"><?= splitOptions[i] ?></option>
+        <? } ?>
+      </select>
+
+      <div class="buttons">
+        <button class="button primary" id="import">Import</button>
+        <button class="button secondary" onclick="google.script.host.close()">Close</button>
+      </div>
+    </div>
+
+    <div id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">📥 Importing split... please wait.</div>
+    </div>
+
+    <script>
+      const splitOptions = <?!= JSON.stringify(splitOptions) ?>;
+
+      function showError(message) {
+        const box = document.getElementById('errorBox');
+        box.textContent = message;
+        box.style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').classList.remove('hidden');
+      }
+
+      function clearError() {
+        const box = document.getElementById('errorBox');
+        box.textContent = '';
+        box.style.display = 'none';
+      }
+
+      document.getElementById('import').onclick = function () {
+        clearError();
+
+        const split = document.getElementById('split').value;
+        if (!split) return;
+
+        document.getElementById('content').classList.add('hidden');
+        document.getElementById('loading').style.display = 'block';
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            if (res && res.ok === false && res.msg) {
+              showError('Failed to import split. ' + res.msg);
+              return;
+            }
+            google.script.host.close();
+          })
+          .withFailureHandler(function(err) {
+            let msg = 'Failed to import split.';
+            if (err) {
+              if (err.message) {
+                msg += ' ' + err.message;
+              } else {
+                msg += ' ' + String(err);
+              }
+            }
+            showError(msg);
+          })
+          .importRosterSplit(split);
+      };
+    </script>
+  </body>
+</html>

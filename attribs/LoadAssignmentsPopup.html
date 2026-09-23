@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <style>
+      body { font-family:"Roboto", sans-serif; background-color:#f9f9f9; padding:20px; color:#333; }
+      h2 { font-size:18px; margin-bottom:8px; }
+      select, textarea { width:100%; font-size:14px; padding:8px; border-radius:6px; border:1px solid #ccc; background-color:#fff; }
+      textarea { margin-top:10px; height:100px; resize:vertical; }
+      label { font-size:14px; font-weight:500; display:block; margin-top:10px; margin-bottom:4px; }
+      .list { max-height:250px; overflow:auto; border:1px solid #ddd; padding:8px; border-radius:6px; background:#fff; margin-top:10px; }
+      .item { display:flex; align-items:center; margin:6px 0; }
+      .item input { margin-right:8px; }
+      .buttons { margin-top:20px; text-align:right; }
+      .button { font-size:14px; padding:8px 16px; border-radius:5px; border:none; cursor:pointer; }
+      .primary { background-color:#1a73e8; color:white; }
+      .secondary { background-color:#ddd; color:#333; }
+      .primary:hover { background-color:#1669c1; }
+      .hidden { display:none; }
+      #loading { display:none; text-align:center; padding-top:80px; }
+      .spinner { width:45px; height:45px; margin:0 auto 15px auto; border:5px solid #ddd; border-top:5px solid #1a73e8; border-radius:50%; animation:spin 1s linear infinite; }
+      .loading-text { font-size:24px; font-weight:600; color:#444; }
+      @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+      .error { margin-top:10px; padding:8px 10px; border-radius:4px; background-color:#fdecea; color:#b71c1c; font-size:13px; display:none; }
+    </style>
+  </head>
+  <body>
+
+    <div id="mainContent">
+      <h2>Load Saved Assignments</h2>
+      <p>Select a data source, choose which save slot or paste a data string, and select which sheets to restore:</p>
+
+      <div id="errorBox" class="error"></div>
+
+      <label for="source">Source:</label>
+      <select id="source">
+        <option value="save">From Save Data</option>
+        <option value="string">From String</option>
+      </select>
+
+      <div id="slotContainer">
+        <label for="slot">Save Slot:</label>
+        <select id="slot">
+          <? for (var i=0; i<slotsData.length; i++) { var s = slotsData[i]; ?>
+            <option value="<?= s.id ?>"><?= s.label ?></option>
+          <? } ?>
+        </select>
+      </div>
+
+      <div id="stringContainer" class="hidden">
+        <label for="stringInput">Paste Data String:</label>
+        <textarea id="stringInput" placeholder="Paste saved data string here..."></textarea>
+      </div>
+
+      <div class="list" id="checks">
+        <? for (var i=0; i<sheetNames.length; i++) { var sheet = sheetNames[i]; ?>
+          <div class="item">
+            <input type="checkbox" value="<?= sheet ?>" checked>
+            <span><?= sheet ?></span>
+          </div>
+        <? } ?>
+      </div>
+
+      <div class="buttons">
+        <button class="button primary" id="load">Load</button>
+        <button class="button secondary" onclick="google.script.host.close()">Close</button>
+      </div>
+    </div>
+
+    <div id="loading">
+      <div class="spinner"></div>
+      <div class="loading-text">📥 Loading assignments... please wait.</div>
+    </div>
+
+    <script>
+      const slotsData = <?!= JSON.stringify(slotsData) ?>;
+      const sheetNames = <?!= JSON.stringify(sheetNames) ?>;
+
+      function showError(message) {
+        const box = document.getElementById('errorBox');
+        box.textContent = message;
+        box.style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+      }
+
+      function clearError() {
+        const box = document.getElementById('errorBox');
+        box.textContent = '';
+        box.style.display = 'none';
+      }
+
+      document.getElementById('source').onchange = function() {
+        const isSave = this.value === 'save';
+        document.getElementById('slotContainer').classList.toggle('hidden', !isSave);
+        document.getElementById('stringContainer').classList.toggle('hidden', isSave);
+      };
+
+      document.getElementById('load').onclick = function () {
+        clearError();
+
+        const source = document.getElementById('source').value;
+        const chosen = [].slice.call(document.querySelectorAll('#checks input[type=checkbox]'))
+          .filter(function(x) { return x.checked; })
+          .map(function(x) { return x.value; });
+        if (!chosen.length) return;
+
+        let rawString = null, id = null;
+
+        if (source === 'save') {
+          id = Number(document.getElementById('slot').value);
+        } else if (source === 'string') {
+          rawString = document.getElementById('stringInput').value.trim();
+          if (!rawString) return;
+        }
+
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('loading').style.display = 'block';
+
+        const runner = google.script.run
+          .withSuccessHandler(function (res) {
+            if (res && res.ok === false && res.msg) {
+              showError('Failed to load assignments. ' + res.msg);
+              return;
+            }
+            google.script.host.close();
+          })
+          .withFailureHandler(function (err) {
+            let msg = 'Failed to load assignments.';
+            if (err) {
+              if (err.message) {
+                msg += ' ' + err.message;
+              } else {
+                msg += ' ' + String(err);
+              }
+            }
+            showError(msg);
+          });
+
+        if (source === 'save') {
+          runner.loadAssignmentsFromSlot(id, chosen);
+        } else {
+          runner.loadAssignmentsFromSlot(0, chosen, rawString);
+        }
+      };
+    </script>
+  </body>
+</html>
