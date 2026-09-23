@@ -5,149 +5,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
     <style>
-      body {
-        font-family:"Roboto", sans-serif;
-        color:#202124;
-        font-size:16px;
-        padding:24px;
-        margin:0;
-        background-color:#fff;
-      }
-
-      .description {
-      margin-bottom: 20px; background-color: #eef2f7;
-      padding: 12px 16px; border-left: 4px solid #ff2a00;
-      border-radius: 6px; font-size: 16px; color: #333;
-      }
-
-      .icon {
-        font-family:'Material Symbols Outlined';
-        font-size:24px;
-        vertical-align:middle;
-        color:#1a73e8;
-        margin-right:8px;
-      }
-
-      .field {
-        margin-top:16px;
-      }
-
-      label {
-        display:block;
-        font-size:17px;
-        margin-bottom:4px;
-        color:#5f6368;
-      }
-
-      input {
-        width:100%;
-        box-sizing:border-box;
-        padding:8px;
-        border:1px solid #dadce0;
-        border-radius:4px;
-        font-size:14px;
-        outline:none;
-      }
-
-      input:focus {
-        border-color:#1a73e8;
-      }
-
-      .button-bar {
-        text-align:right;
-        margin-top:24px;
-      }
-
-      .button {
-        background-color:#1a73e8;
-        color:white;
-        border:none;
-        padding:6px 16px;
-        border-radius:4px;
-        font-size:16px;
-        cursor:pointer;
-        margin-left:8px;
-      }
-
-      .button.secondary {
-        background-color:#f1f3f4;
-        color:#202124;
-      }
-
-      .button:hover {
-        background-color:#1669c1;
-      }
-
-      .button.secondary:hover {
-        background-color:#e2e5e9;
-      }
-
-      #loading {
-        display:none;
-        text-align:center;
-        padding-top:40px;
-      }
-
-      .spinner {
-        width:60px;
-        height:60px;
-        margin:0 auto 15px auto;
-        border:5px solid #ddd;
-        border-top:5px solid #1a73e8;
-        border-radius:50%;
-        animation:spin 1s linear infinite;
-      }
-
-      .loading-text {
-        font-size:16px;
-        font-weight:500;
-        color:#444;
-      }
-
-      .error {
-        margin-top:12px;
-        padding:8px 10px;
-        border-radius:4px;
-        background-color:#fdecea;
-        color:#b71c1c;
-        font-size:13px;
-        display:none;
-      }
-
-      @keyframes spin {
-        0%{transform:rotate(0)}
-        100%{transform:rotate(360deg)}
-      }
+      body { font-family: "Roboto", sans-serif; color: #202124; font-size: 16px; padding: 24px; margin: 0; background: #fff; }
+      .icon { font-family: 'Material Symbols Outlined'; font-size: 24px; vertical-align: middle; color: #1a73e8; margin-right: 8px; }
+      .field { margin-top: 16px; }
+      label { display: block; font-size: 17px; margin-bottom: 4px; color: #5f6368; }
+      input { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #dadce0; border-radius: 4px; font-size: 14px; outline: none; }
+      input:focus { border-color: #1a73e8; }
+      .description { margin: 8px 0 20px; background: #eef2f7; padding: 12px 16px; border-left: 4px solid #ff2a00; border-radius: 6px; font-size: 16px; color: #333; }
+      .button-bar { text-align: right; margin-top: 24px; }
+      .button { background: #1a73e8; color: white; border: none; padding: 6px 16px; border-radius: 4px; font-size: 16px; cursor: pointer; margin-left: 8px; }
+      .button:hover { background: #1669c1; }
+      .button.secondary { background: #f1f3f4; color: #202124; }
+      .button.secondary:hover { background: #e2e5e9; }
+      .error { display: none; margin-top: 12px; padding: 8px 10px; border-radius: 4px; background: #fdecea; color: #b71c1c; font-size: 13px; }
+      #loading { display: none; text-align: center; padding-top: 40px; }
+      .spinner { width: 60px; height: 60px; margin: 0 auto 15px; border: 5px solid #ddd; border-top-color: #1a73e8; border-radius: 50%; animation: spin 1s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
     </style>
   </head>
-
   <body>
-
-    <div id="mainContent">
-      <header>
-        <span class="icon">login</span>
-        <strong>Import RaidHelper Composition</strong>
-      </header>
+    <div id="form">
+      <header><span class="icon">login</span><strong>Import RaidHelper Composition</strong></header>
 
       <div class="field">
-        <label>RaidHelper ID</label>
+        <label for="raidHelperId">RaidHelper ID</label>
         <input id="raidHelperId" type="text">
       </div>
-
       <div class="description">
-        You can find your ID by going to your event in Discord server and clicking the "Comp" button at the bottom of the signup. Then copy the numbers at the end of the URL.
+        Open your event in Discord and click the "Comp" button at the bottom of the signup, then copy the numbers at the end of the URL.
       </div>
 
       <div class="field">
-        <label>API Key</label>
+        <label for="apiKey">API Key</label>
         <input id="apiKey" type="password" value="<?= apiKeyMasked ?>">
       </div>
-
       <div class="description">
-        You can find your API key by going to any channel in your Discord server and typing "/apikey show".
+        Type "/apikey show" in any channel of your Discord server to get it. Leave it as is to keep the saved key.
       </div>
 
-      <div id="errorBox" class="error"></div>
+      <div id="error" class="error"></div>
 
       <div class="button-bar">
         <button class="button secondary" onclick="google.script.host.close()">Cancel</button>
@@ -157,51 +53,32 @@
 
     <div id="loading">
       <div class="spinner"></div>
-      <div class="loading-text">Importing RaidHelper data…</div>
+      <div>Importing RaidHelper data…</div>
     </div>
 
     <script>
-      function showError(message) {
-        const box = document.getElementById('errorBox')
-        box.textContent = message
-        box.style.display = 'block'
-        document.getElementById('loading').style.display = 'none'
-        document.getElementById('mainContent').style.display = 'block'
+      function setLoading(loading) {
+        document.getElementById('form').style.display = loading ? 'none' : 'block';
+        document.getElementById('loading').style.display = loading ? 'block' : 'none';
       }
 
-      function clearError() {
-        const box = document.getElementById('errorBox')
-        box.textContent = ''
-        box.style.display = 'none'
+      function showError(message) {
+        const box = document.getElementById('error');
+        box.textContent = message;
+        box.style.display = message ? 'block' : 'none';
       }
 
       function submitForm() {
-        clearError()
-
-        const raidHelperId = document.getElementById("raidHelperId").value.trim()
-        const apiKey = document.getElementById("apiKey").value
-
-        document.getElementById('mainContent').style.display = 'none'
-        document.getElementById('loading').style.display = 'block'
-
+        showError('');
+        setLoading(true);
         google.script.run
-          .withSuccessHandler(function () {
-            google.script.host.close()
+          .withSuccessHandler(() => google.script.host.close())
+          .withFailureHandler(err => {
+            setLoading(false);
+            showError('Failed to import RaidHelper data. ' + ((err && err.message) || err || ''));
           })
-          .withFailureHandler(function (err) {
-            let msg = 'Failed to import RaidHelper data.'
-            if (err) {
-              if (err.message) {
-                msg += ' ' + err.message
-              } else {
-                msg += ' ' + String(err)
-              }
-            }
-            showError(msg)
-          })
-          .processRaidHelperInput(raidHelperId, apiKey)
+          .processRaidHelperInput(document.getElementById('raidHelperId').value.trim(), document.getElementById('apiKey').value);
       }
     </script>
-
   </body>
 </html>
