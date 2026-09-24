@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <style>
+      body { font-family: Roboto, sans-serif; font-size: 13px; color: #202124; margin: 0; padding: 16px 18px 70px; }
+      h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: #5f6368; margin: 18px 0 8px; }
+      label { display: block; color: #5f6368; font-size: 12px; margin-bottom: 3px; }
+      input[type=text], input[type=number], select { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #dadce0; border-radius: 4px; font: inherit; }
+      input[type=number] { width: 80px; }
+      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .grid .wide { grid-column: span 2; }
+      .grid .full { grid-column: 1 / -1; }
+      .check { display: flex; align-items: center; gap: 6px; color: #202124; font-size: 13px; margin: 0; }
+      .check input { margin: 0; }
+      .block { border: 1px solid #dadce0; border-left: 4px solid #660000; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; }
+      .block-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+      .block-head .type { font-weight: 600; min-width: 96px; }
+      .block-head input { flex: 1; }
+      .icon-button { border: 0; background: #f1f3f4; border-radius: 4px; padding: 4px 8px; cursor: pointer; font: inherit; }
+      .icon-button:hover { background: #e2e5e9; }
+      .hint { color: #5f6368; font-size: 11px; margin-top: 3px; }
+      .adder { display: flex; gap: 8px; }
+      .adder select { width: auto; }
+      .duties { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .excludes { display: flex; flex-wrap: wrap; gap: 10px; }
+      .error { display: none; background: #fdecea; color: #b71c1c; padding: 8px 10px; border-radius: 4px; margin-top: 12px; }
+      .done { display: none; background: #e7f5ec; color: #12652b; padding: 12px 14px; border-radius: 6px; line-height: 1.5; }
+      .bar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid #e8eaed; padding: 10px 18px; text-align: right; }
+      .button { background: #1a73e8; color: #fff; border: 0; border-radius: 4px; padding: 8px 18px; font: inherit; cursor: pointer; margin-left: 8px; }
+      .button:hover { background: #1669c1; }
+      .button:disabled { background: #9aa0a6; cursor: default; }
+      .button.secondary { background: #f1f3f4; color: #202124; }
+    </style>
+  </head>
+  <body>
+    <div id="form">
+      <div class="grid">
+        <div class="wide">
+          <label for="name">Boss name (also the tab name)</label>
+          <input id="name" type="text" placeholder="Flame Leviathan">
+        </div>
+        <div>
+          <label for="raid">Raid</label>
+          <input id="raid" type="text" list="raidTags" placeholder="ULD">
+          <datalist id="raidTags"></datalist>
+        </div>
+        <div class="full">
+          <label for="raidPlanUrl">Raid plan link (optional)</label>
+          <input id="raidPlanUrl" type="text" placeholder="https://raidplan.io/plan/…">
+        </div>
+      </div>
+
+      <h3>Blocks</h3>
+      <div id="blocks"></div>
+      <div class="adder">
+        <select id="newType">
+          <option value="tanks">Tanks</option>
+          <option value="healers">Healers</option>
+          <option value="markers">Marker groups</option>
+          <option value="list">Pick list</option>
+          <option value="seats">Seat grid</option>
+        </select>
+        <button class="icon-button" onclick="addBlock(document.getElementById('newType').value)">+ Add block</button>
+      </div>
+
+      <h3>Raid-wide duties</h3>
+      <div class="hint" style="margin-bottom:6px">Copied from the "*" rows of AutoAssignData, filled from Quick Assigns like on the other bosses.</div>
+      <div id="duties" class="duties"></div>
+
+      <div id="error" class="error"></div>
+    </div>
+
+    <div id="done" class="done"></div>
+
+    <div class="bar">
+      <button class="button secondary" id="close" onclick="google.script.host.close()">Cancel</button>
+      <button class="button" id="create" onclick="create()">Create tab</button>
+    </div>
+
+    <script>
+      const OPTIONS = <?!= optionsJson ?>;
+      const TYPES = { tanks: 'Tanks', healers: 'Healers', markers: 'Marker groups', list: 'Pick list', seats: 'Seat grid' };
+      const DEFAULTS = {
+        tanks: { title: 'Tank Assignments', rows: 2 },
+        healers: { title: 'Healer Assignments', rows: 6 },
+        markers: { title: 'Ranged Positions', markers: 'Star, Triangle, Square', rows: 5, autoRoles: 'Ranged', markerRoles: '', ensureEach: '', totemParties: true, balanceGroups: false, healerRow: true, firstHealer: 3 },
+        list: { title: 'Interrupts', rows: 3, autoRoles: '', preferred: '', excludeFrom: [], critical: false, selection: true },
+        seats: { title: 'Vehicles', columns: 'Siege Engine: Driver, Siege Engine: Gunner, Demolisher: Driver, Demolisher: Passenger, Chopper: Driver', rows: 5, markerRoles: 'Tank, Healer, Ranged, Melee, Healer', autoRoles: 'Tank, Healer, Melee, Ranged' },
+      };
+      const blocks = [];
+
+      document.getElementById('raidTags').innerHTML = OPTIONS.raidTags.map(t => `<option value="${escapeHtml(t)}">`).join('');
+      document.getElementById('duties').innerHTML = OPTIONS.duties.map((duty, i) => `
+        <label class="check" title="${escapeHtml(duty.autoRoles)}">
+          <input type="checkbox" data-duty="${i}"> ${escapeHtml(duty.label)} (${duty.rows})
+        </label>`).join('') || '<div class="hint">No "*" rows found.</div>';
+
+      function escapeHtml(text) {
+        return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function addBlock(type) {
+        blocks.push(Object.assign({ type }, JSON.parse(JSON.stringify(DEFAULTS[type]))));
+        render();
+      }
+
+      function move(i, delta) {
+        const j = i + delta;
+        if (j < 0 || j >= blocks.length) return;
+        [blocks[i], blocks[j]] = [blocks[j], blocks[i]];
+        render();
+      }
+
+      function removeBlock(i) {
+        blocks.splice(i, 1);
+        render();
+      }
+
+      // One input bound to a block field; `kind` is text, number or checkbox.
+      function field(i, key, label, kind, hint, css) {
+        const block = blocks[i];
+        if (kind === 'checkbox') {
+          return `<label class="check ${css || ''}"><input type="checkbox" ${block[key] ? 'checked' : ''}
+            onchange="blocks[${i}].${key} = this.checked; render()"> ${label}</label>`;
+        }
+        return `<div class="${css || ''}"><label>${label}</label>
+          <input type="${kind}" value="${escapeHtml(block[key])}" oninput="blocks[${i}].${key} = this.value">
+          ${hint ? `<div class="hint">${hint}</div>` : ''}</div>`;
+      }
+
+      function render() {
+        document.getElementById('blocks').innerHTML = blocks.map((block, i) => {
+          const earlier = blocks.slice(0, i).filter(b => ['markers', 'list', 'seats'].includes(b.type));
+          if (block.excludeFrom) block.excludeFrom = block.excludeFrom.filter(t => earlier.some(b => b.title === t));
+          let body = '';
+          if (block.type === 'tanks' || block.type === 'healers') {
+            body = field(i, 'rows', block.type === 'tanks' ? 'Tanks' : 'Healers', 'number',
+              `Filled from ${block.type === 'tanks' ? 'TANKS_GLOBAL' : 'HEALERS_GLOBAL'} in Quick Assigns.`);
+          } else if (block.type === 'markers') {
+            body = field(i, 'markers', 'Markers', 'text', 'Star, Circle, Diamond, Triangle, Moon, Square, Cross or Skull get their icon.', 'wide')
+              + field(i, 'rows', 'Players per marker', 'number')
+              + field(i, 'autoRoles', 'Who (AutoRoles)', 'text', 'e.g. Ranged, or Ranged, Healer. Blank = everyone.', 'wide')
+              + field(i, 'markerRoles', 'Per marker (MarkerRoles)', 'text', 'Optional, e.g. Ranged, Melee, Ranged.')
+              + field(i, 'ensureEach', 'Each group needs one of (EnsureEach)', 'text', 'Optional, e.g. Mage, Druid.', 'wide')
+              + field(i, 'totemParties', 'Build around shaman parties', 'checkbox')
+              + field(i, 'balanceGroups', 'Keep groups even', 'checkbox')
+              + field(i, 'healerRow', 'Healer row above each marker', 'checkbox')
+              + (block.healerRow ? field(i, 'firstHealer', 'First marker gets healer #', 'number', 'Needs a Healers block.') : '');
+          } else if (block.type === 'list') {
+            body = field(i, 'rows', 'Players', 'number')
+              + field(i, 'autoRoles', 'Who (AutoRoles)', 'text', 'e.g. Any Rogue, Any Warrior. Blank = everyone.', 'wide')
+              + field(i, 'preferred', 'Preferred names', 'text', 'Optional, placed first.', 'full')
+              + field(i, 'selection', 'Picks a few out of many', 'checkbox')
+              + field(i, 'critical', 'Critical (red warning if nobody)', 'checkbox')
+              + (earlier.length ? `<div class="full"><label>Don't reuse people placed by</label><div class="excludes">${earlier.map(b => `
+                  <label class="check"><input type="checkbox" ${block.excludeFrom.includes(b.title) ? 'checked' : ''}
+                    onchange="toggleExclude(${i}, '${escapeHtml(b.title).replace(/'/g, "\\'")}', this.checked)"> ${escapeHtml(b.title)}</label>`).join('')}
+                </div></div>` : '');
+          } else if (block.type === 'seats') {
+            body = field(i, 'columns', 'Seat columns', 'text', '"Group: Seat" pairs; consecutive columns of a group share a header.', 'full')
+              + field(i, 'rows', 'Rows', 'number')
+              + field(i, 'markerRoles', 'Preferred role per column', 'text', 'Optional, one per column.', 'wide')
+              + field(i, 'autoRoles', 'Fill order (AutoRoles)', 'text', 'Roles listed first pick their columns first.', 'full');
+          }
+          return `<div class="block">
+            <div class="block-head">
+              <span class="type">${TYPES[block.type]}</span>
+              <input type="text" value="${escapeHtml(block.title)}" oninput="blocks[${i}].title = this.value; renderLater()">
+              <button class="icon-button" onclick="move(${i}, -1)" title="Move up">↑</button>
+              <button class="icon-button" onclick="move(${i}, 1)" title="Move down">↓</button>
+              <button class="icon-button" onclick="removeBlock(${i})" title="Remove">✕</button>
+            </div>
+            <div class="grid">${body}</div>
+          </div>`;
+        }).join('');
+      }
+
+      // Titles feed the "Don't reuse" checkboxes of later blocks; re-render once typing pauses.
+      let pending = null;
+      function renderLater() {
+        clearTimeout(pending);
+        pending = setTimeout(() => {
+          const focused = document.activeElement;
+          const index = Array.from(document.querySelectorAll('.block-head input[type=text]')).indexOf(focused);
+          render();
+          if (index !== -1) {
+            const input = document.querySelectorAll('.block-head input[type=text]')[index];
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+          }
+        }, 600);
+      }
+
+      function toggleExclude(i, title, checked) {
+        const list = blocks[i].excludeFrom.filter(t => t !== title);
+        if (checked) list.push(title);
+        blocks[i].excludeFrom = list;
+      }
+
+      function showError(message) {
+        const box = document.getElementById('error');
+        box.textContent = message;
+        box.style.display = message ? 'block' : 'none';
+      }
+
+      function create() {
+        showError('');
+        const spec = {
+          name: document.getElementById('name').value,
+          raid: document.getElementById('raid').value,
+          raidPlanUrl: document.getElementById('raidPlanUrl').value,
+          blocks: blocks,
+          duties: Array.from(document.querySelectorAll('[data-duty]:checked')).map(box => OPTIONS.duties[box.dataset.duty].label),
+        };
+        const button = document.getElementById('create');
+        button.disabled = true;
+        button.textContent = 'Creating…';
+        google.script.run
+          .withSuccessHandler(done)
+          .withFailureHandler(err => {
+            button.disabled = false;
+            button.textContent = 'Create tab';
+            showError((err && err.message) || String(err));
+          })
+          .createBossTab(spec);
+      }
+
+      function done(result) {
+        document.getElementById('form').style.display = 'none';
+        document.getElementById('create').style.display = 'none';
+        document.getElementById('close').textContent = 'Close';
+        const lines = [
+          `<b>${escapeHtml(result.tab)}</b> is ready. Assign Whole Sheet now fills it.`,
+          `AutoAssignData rows added: ${escapeHtml(result.rows.join(', ') || 'none')}.`,
+          result.namedRanges.length ? `Tank/healer ranges: ${escapeHtml(result.namedRanges.join(', '))}.` : '',
+          `Paste the boss icon into Raid Data!${result.images[0]} and the raid plan picture into Raid Data!${result.images[1]} (Insert > Image > Image in cell).`,
+          result.excludedFrom ? `Left out of ${result.excludedFrom} "*" row(s), which don't fit this layout.` : '',
+          result.outsideClearRange.length ? `Clear Boss Assigns only reaches AN6:CI38, so it won't empty: ${escapeHtml(result.outsideClearRange.join(', '))}.` : '',
+        ].filter(Boolean);
+        const box = document.getElementById('done');
+        box.innerHTML = lines.map(line => `<div>${line}</div>`).join('');
+        box.style.display = 'block';
+      }
+
+      addBlock('tanks');
+      addBlock('healers');
+    </script>
+  </body>
+</html>

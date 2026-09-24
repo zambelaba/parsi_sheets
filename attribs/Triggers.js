@@ -3,6 +3,8 @@ function onOpen() {
     .createMenu('📒 Spreadsheet Tools')
     .addItem('Assign Whole Sheet', 'autoAssignGroups')
     .addItem('Clear Boss Assigns', 'clearValidatedUnprotectedCells')
+    .addSeparator()
+    .addItem('Add Boss Tab…', 'showBossBuilder')
     .addToUi();
 }
 
