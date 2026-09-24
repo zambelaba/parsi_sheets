@@ -36,13 +36,13 @@ const BOSS_BUILDER = Object.freeze({
 });
 
 function showBossBuilder() {
-  const template = HtmlService.createTemplateFromFile('BossBuilder');
+  const template = HtmlService.createTemplateFromFile('BossBuilderDialog');
   // Sheet text ends up inside a <script>; escaping "<" keeps it from closing it.
   template.optionsJson = JSON.stringify(bossBuilderOptions_(SpreadsheetApp.getActiveSpreadsheet())).replace(/</g, '\\u003c');
   SpreadsheetApp.getUi().showModalDialog(template.evaluate().setWidth(760).setHeight(760), 'Add Boss Tab');
 }
 
-/** Called by BossBuilder.html. Returns what was created, or throws a message worth showing. */
+/** Called by BossBuilderDialog.html. Returns what was created, or throws a message worth showing. */
 function createBossTab(spec) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const config = readEncounterConfig_(ss);
